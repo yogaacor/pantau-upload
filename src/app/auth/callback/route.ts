@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/";
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=nocode`);
+    return NextResponse.redirect(`${origin}/?error=nocode`);
   }
 
   const supabase = await createClient();
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   if (error) {
     console.error("[Auth Callback Error]:", error);
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(error.message || "tidak-terdaftar")}`,
+      `${origin}/?error=${encodeURIComponent(error.message || "tidak-terdaftar")}`,
     );
   }
 

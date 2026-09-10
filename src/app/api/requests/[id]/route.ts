@@ -67,12 +67,12 @@ export async function PATCH(request: Request, ctx: Ctx) {
         if (!judul) throw new ApiError(400, "Judul wajib diisi");
         patch.judul = judul;
       }
-      if (body.deskripsi !== undefined) patch.deskripsi = body.deskripsi.trim() || null;
-      if (body.tags !== undefined) patch.tags = body.tags.filter(Boolean);
-      if (body.kategori !== undefined) patch.kategori = body.kategori.trim() || null;
+      if (body.deskripsi !== undefined) patch.deskripsi = body.deskripsi?.trim() || null;
+      if (body.tags !== undefined) patch.tags = body.tags?.filter(Boolean) ?? [];
+      if (body.kategori !== undefined) patch.kategori = body.kategori?.trim() || null;
       if (body.privacy !== undefined) patch.privacy = body.privacy;
       if (body.jadwal_tayang !== undefined) patch.jadwal_tayang = body.jadwal_tayang || null;
-      if (body.catatan !== undefined) patch.catatan = body.catatan.trim() || null;
+      if (body.catatan !== undefined) patch.catatan = body.catatan?.trim() || null;
       if (body.ck_final !== undefined) patch.ck_final = body.ck_final;
       if (body.ck_resolusi !== undefined) patch.ck_resolusi = body.ck_resolusi;
       if (body.ck_copyright !== undefined) patch.ck_copyright = body.ck_copyright;

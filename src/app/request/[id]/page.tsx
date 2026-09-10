@@ -4,7 +4,6 @@ import { TopNav } from "@/components/TopNav";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DriveUploader } from "@/components/DriveUploader";
 import { AdminPanel } from "@/components/AdminPanel";
-import { CommentBox } from "@/components/CommentBox";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { driveViewUrl } from "@/lib/google";
 import {
@@ -13,21 +12,12 @@ import {
   timeAgo,
   youtubeThumb,
 } from "@/lib/format";
-import {
-  PRIVACY_LABEL,
-  type RequestEvent,
-  type RequestRow,
-  type RequestWithRequester,
+import type {
+  RequestEvent,
+  RequestWithRequester,
 } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-const CHECKS: { key: keyof RequestRow; label: string }[] = [
-  { key: "ck_final", label: "Versi final" },
-  { key: "ck_resolusi", label: "Minimal 1080p" },
-  { key: "ck_audio", label: "Audio dicek" },
-  { key: "ck_copyright", label: "Aman hak cipta" },
-];
 
 const EVENT_DOT: Record<string, string> = {
   dibuat: "bg-sky-400",
@@ -174,67 +164,16 @@ export default async function RequestDetailPage({
                   />
                 </div>
               )}
-
-              {(dapatEdit || isAdmin) && !row.drive_deleted_at && (
-                <div className="mt-5 border-t border-ink-800 pt-5">
-                  <p className="label">Thumbnail (opsional)</p>
-                  <DriveUploader
-                    requestId={row.id}
-                    kind="thumb"
-                    currentName={row.thumb_file_name}
-                  />
-                </div>
-              )}
             </div>
 
-            <div className="card p-5">
-              <h2 className="mb-4 text-sm font-semibold">Detail</h2>
-              <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-                <Field label="Privasi" value={PRIVACY_LABEL[row.privacy]} />
-                <Field label="Kategori" value={row.kategori ?? "—"} />
-                <Field
-                  label="Diharapkan tayang"
-                  value={formatDateTime(row.jadwal_tayang)}
-                />
-                <Field
-                  label="Tag"
-                  value={row.tags.length ? row.tags.join(", ") : "—"}
-                />
-              </dl>
-
-              {row.deskripsi && (
-                <div className="mt-5">
-                  <p className="label">Deskripsi</p>
-                  <p className="text-sm whitespace-pre-wrap text-ink-300">
-                    {row.deskripsi}
-                  </p>
-                </div>
-              )}
-
-              {row.catatan && (
-                <div className="mt-5">
-                  <p className="label">Catatan dari PIC</p>
-                  <p className="text-sm whitespace-pre-wrap text-ink-300">
-                    {row.catatan}
-                  </p>
-                </div>
-              )}
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                {CHECKS.map((c) => (
-                  <span
-                    key={String(c.key)}
-                    className={`badge ${
-                      row[c.key]
-                        ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30"
-                        : "bg-ink-800 text-ink-400 ring-ink-700"
-                    }`}
-                  >
-                    {row[c.key] ? "✓" : "○"} {c.label}
-                  </span>
-                ))}
+            {row.catatan && (
+              <div className="card p-5">
+                <h2 className="mb-2 text-sm font-semibold">Catatan dari PIC</h2>
+                <p className="text-sm whitespace-pre-wrap text-ink-300">
+                  {row.catatan}
+                </p>
               </div>
-            </div>
+            )}
 
             <div className="card p-5">
               <h2 className="mb-4 text-sm font-semibold">Riwayat</h2>
@@ -260,8 +199,6 @@ export default async function RequestDetailPage({
                   <li className="text-sm text-ink-400">Belum ada aktivitas.</li>
                 )}
               </ol>
-
-              <CommentBox requestId={row.id} />
             </div>
           </div>
 
@@ -293,14 +230,5 @@ export default async function RequestDetailPage({
         </div>
       </main>
     </>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="label">{label}</dt>
-      <dd className="text-sm text-ink-300">{value}</dd>
-    </div>
   );
 }
