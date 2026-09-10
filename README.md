@@ -89,8 +89,8 @@ cp .env.example .env.local
 Isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
 
-`DRIVE_FOLDER_ID` sudah terisi dengan folder tujuan. Kalau mau ganti, ambil
-dari URL folder Drive: `https://drive.google.com/drive/folders/<ID INI>`.
+Isi juga `DRIVE_FOLDER_ID` — ambil dari URL folder Drive tujuan:
+`https://drive.google.com/drive/folders/<ID INI>`.
 
 ### 5. Ambil refresh token Drive
 
