@@ -10,7 +10,6 @@
 
 import http from "node:http";
 import { readFileSync } from "node:fs";
-import { createInterface } from "node:readline";
 
 const PORT = 5175;
 const REDIRECT_URI = `http://localhost:${PORT}/callback`;
@@ -118,16 +117,14 @@ const server = http.createServer(async (req, res) => {
   console.log("\n  Tempel baris ini ke .env.local:\n");
   console.log(`  GOOGLE_REFRESH_TOKEN=${json.refresh_token}\n`);
 
-  server.close();
-  process.exit(0);
+  // Tunggu server benar-benar tertutup sebelum keluar. Memanggil
+  // process.exit() saat handle-nya masih menutup memicu assertion libuv
+  // di Windows, yang terlihat seperti kegagalan padahal token sudah dapat.
+  server.close(() => process.exit(0));
 });
 
 server.listen(PORT, () => {
   console.log(`  Menunggu callback di ${REDIRECT_URI} …\n`);
 });
 
-// Biar Ctrl+C bersih
-createInterface({ input: process.stdin }).on("SIGINT", () => {
-  server.close();
-  process.exit(0);
-});
+process.on("SIGINT", () => server.close(() => process.exit(0)));
