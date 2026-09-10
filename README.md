@@ -51,13 +51,21 @@ byte terakhir, bukan mengulang dari nol.
 
 1. Buat project di [console.cloud.google.com](https://console.cloud.google.com).
 2. **APIs & Services → Library** → aktifkan **Google Drive API**.
-3. **OAuth consent screen**:
-   - User type: External
-   - Isi nama aplikasi & email
-   - Tambahkan scope `https://www.googleapis.com/auth/drive`
-   - **Publish app** (jangan biarkan di mode Testing — refresh token di mode
-     Testing kedaluwarsa tiap 7 hari)
-4. **Credentials → Create Credentials → OAuth client ID** → *Web application*.
+3. **Google Auth Platform** (dulu bernama OAuth consent screen):
+   - Audience: External
+   - **Branding**: isi nama aplikasi, email, Application home page, dan
+     Application privacy policy link (`https://<domainmu>/privacy`), serta
+     Authorized domain
+   - **Data Access**: tambahkan scope `https://www.googleapis.com/auth/drive.file`
+   - **Audience → Publish app** (jangan biarkan di mode Testing — refresh
+     token di mode Testing kedaluwarsa tiap 7 hari)
+
+   > Scope `drive.file` dipilih karena statusnya *non-sensitive*: tidak perlu
+   > verifikasi Google, dan tidak diblokir di mode production. Scope `drive`
+   > penuh berstatus *restricted* — di production Google memblokirnya total
+   > sampai aplikasi lolos audit keamanan.
+
+4. **Clients → Create client** → *Web application*.
 
    Authorized redirect URIs — masukkan ketiganya:
 
@@ -87,10 +95,8 @@ cp .env.example .env.local
 ```
 
 Isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
-
-Isi juga `DRIVE_FOLDER_ID` — ambil dari URL folder Drive tujuan:
-`https://drive.google.com/drive/folders/<ID INI>`.
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. `DRIVE_FOLDER_ID` biarkan kosong —
+diisi otomatis di langkah 6.
 
 ### 5. Ambil refresh token Drive
 
@@ -98,13 +104,25 @@ Isi juga `DRIVE_FOLDER_ID` — ambil dari URL folder Drive tujuan:
 npm run drive:token
 ```
 
-Buka link yang tercetak, login dengan **akun pemilik folder Drive**. Kalau
-muncul layar *"Google hasn't verified this app"*, klik **Advanced → Go to …
-(unsafe)** — normal untuk aplikasi internal yang belum lewat verifikasi.
+Buka link yang tercetak, login dengan **akun Drive tujuan**, lalu izinkan.
+`GOOGLE_REFRESH_TOKEN` yang tercetak tempel ke `.env.local`.
 
-Tempel `GOOGLE_REFRESH_TOKEN` yang tercetak ke `.env.local`.
+### 6. Buat folder tujuan
 
-Lalu pastikan semuanya nyambung:
+```bash
+npm run drive:folder
+```
+
+Membuat folder bernama `pantau-upload` di Drive akun tersebut dan langsung
+menulis ID-nya ke `.env.local`. Aman dijalankan berkali-kali — kalau
+foldernya sudah ada, ID yang sama yang dipakai.
+
+Foldernya harus dibuat lewat perintah ini, bukan folder lama yang sudah ada
+di Drive: scope `drive.file` hanya memberi akses ke berkas yang dibuat
+aplikasi ini sendiri. Setelah jadi, foldernya tetap milikmu — bisa dibuka,
+dipindah, atau di-share seperti folder biasa.
+
+Terakhir, pastikan semuanya nyambung:
 
 ```bash
 npm run drive:check
@@ -113,7 +131,7 @@ npm run drive:check
 Skrip ini menukar token, membaca folder tujuan, menulis file uji, lalu
 menghapusnya lagi. Kalau ketiganya lolos, upload dari website pasti jalan.
 
-### 6. Daftarkan dirimu sebagai admin
+### 7. Daftarkan dirimu sebagai admin
 
 Login pertama kali hanya bisa kalau emailmu sudah ada di tabel `allowlist`.
 Jalankan di Supabase SQL Editor:
@@ -125,7 +143,7 @@ values ('email-kamu@gmail.com', 'admin', null);
 
 Setelah itu anggota lain bisa kamu tambahkan lewat menu **Anggota** di web.
 
-### 7. Jalankan
+### 8. Jalankan
 
 ```bash
 npm run dev

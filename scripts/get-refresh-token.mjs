@@ -15,10 +15,12 @@ import { createInterface } from "node:readline";
 const PORT = 5175;
 const REDIRECT_URI = `http://localhost:${PORT}/callback`;
 
-// Scope penuh dibutuhkan untuk menulis ke folder Drive yang sudah ada.
-// Kalau nanti kamu ganti ke folder yang dibuat aplikasi sendiri, scope ini
-// bisa diturunkan ke .../auth/drive.file.
-const SCOPE = process.env.DRIVE_SCOPE ?? "https://www.googleapis.com/auth/drive";
+// drive.file = akses hanya ke file yang dibuat aplikasi ini sendiri.
+// Statusnya non-sensitive, jadi tidak butuh verifikasi Google dan tidak
+// diblokir di mode production. Konsekuensinya folder tujuan harus dibuat
+// oleh aplikasi — lihat scripts/ensure-folder.mjs.
+const SCOPE =
+  process.env.DRIVE_SCOPE ?? "https://www.googleapis.com/auth/drive.file";
 
 function loadEnv() {
   const env = {};

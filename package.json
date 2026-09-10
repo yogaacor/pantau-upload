@@ -9,7 +9,8 @@
     "lint": "eslint",
     "drive:token": "node scripts/get-refresh-token.mjs",
     "drive:check": "node scripts/check-drive.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "drive:folder": "node scripts/ensure-folder.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
