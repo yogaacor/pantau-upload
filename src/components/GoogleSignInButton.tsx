@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export function GoogleSignInButton({ next = "/" }: { next?: string }) {
+export function GoogleSignInButton({
+  next = "/",
+  variant = "ghost",
+}: {
+  next?: string;
+  variant?: "ghost" | "primary";
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +36,7 @@ export function GoogleSignInButton({ next = "/" }: { next?: string }) {
       <button
         onClick={signIn}
         disabled={loading}
-        className="btn-ghost mt-7 w-full py-3"
+        className={`${variant === "primary" ? "btn-primary" : "btn-ghost"} w-full py-3`}
       >
         <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
           <path

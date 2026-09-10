@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const profile = await getSessionProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/");
 
   const supabase = await createClient();
   const { data } = await supabase

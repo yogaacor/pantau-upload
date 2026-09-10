@@ -20,7 +20,7 @@ export default async function AdminPage({
   searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const profile = await getSessionProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/");
   if (profile.role !== "admin") redirect("/dashboard");
 
   const { status, q } = await searchParams;

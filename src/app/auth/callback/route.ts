@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/";
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=nocode`);
+    return NextResponse.redirect(`${origin}/?error=nocode`);
   }
 
   const supabase = await createClient();
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     // Trigger handle_new_user() menolak email di luar allowlist, dan
     // penolakan itu muncul sebagai error di sini.
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent("tidak-terdaftar")}`,
+      `${origin}/?error=${encodeURIComponent("tidak-terdaftar")}`,
     );
   }
 

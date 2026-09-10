@@ -30,57 +30,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Animasi dekoratif untuk panel login */
-@keyframes pu-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes pu-fill {
-  0% {
-    width: 12%;
-  }
-  70%,
-  100% {
-    width: 68%;
-  }
-}
-
-@keyframes pu-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(18px, -22px, 0) scale(1.08);
-  }
-}
-
-@utility animate-float {
-  animation: pu-float 7s ease-in-out infinite;
-}
-
-@utility animate-fill {
-  animation: pu-fill 3.5s ease-out infinite alternate;
-}
-
-@utility animate-drift {
-  animation: pu-drift 16s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-float,
-  .animate-fill,
-  .animate-drift {
-    animation: none;
-  }
-}
-
 /* Scrollbar yang tidak mencolok di panel gelap */
 * {
   scrollbar-width: thin;

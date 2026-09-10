@@ -45,7 +45,7 @@ export default async function RequestDetailPage({
 }) {
   const { id } = await params;
   const profile = await getSessionProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/");
 
   const supabase = await createClient();
 

@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AnggotaPage() {
   const profile = await getSessionProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/");
   if (profile.role !== "admin") redirect("/dashboard");
 
   const supabase = await createClient();

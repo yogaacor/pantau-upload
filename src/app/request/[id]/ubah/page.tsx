@@ -14,7 +14,7 @@ export default async function UbahRequestPage({
 }) {
   const { id } = await params;
   const profile = await getSessionProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/");
 
   const supabase = await createClient();
   const { data } = await supabase

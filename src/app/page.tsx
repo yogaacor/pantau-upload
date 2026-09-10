@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { getSessionProfile } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+const ERROR_TEXT: Record<string, string> = {
+  "tidak-terdaftar": "Login gagal disimpan. Coba ulangi.",
+  nocode: "Proses login terputus. Coba ulangi.",
+};
 
 const LANGKAH = [
   {
@@ -23,9 +29,20 @@ const LANGKAH = [
   },
 ];
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; next?: string }>;
+}) {
   const profile = await getSessionProfile();
   if (profile) redirect(profile.role === "admin" ? "/admin" : "/dashboard");
+
+  const { error, next } = await searchParams;
+  const message = error ? (ERROR_TEXT[error] ?? error) : null;
+  // "/login" sudah tidak ada; tautan lama yang masih menunjuk ke sana
+  // diarahkan ke beranda supaya tidak memantul percuma setelah login.
+  const tujuan =
+    next?.startsWith("/") && !next.startsWith("/login") ? next : "/";
 
   return (
     <div className="min-h-dvh">
@@ -37,9 +54,6 @@ export default async function Home() {
             </span>
             pantau<span className="-ml-2 text-ink-400">-upload</span>
           </span>
-          <Link href="/login" className="btn-ghost ml-auto px-3 py-1.5 text-xs">
-            Masuk
-          </Link>
         </div>
       </header>
 
@@ -54,15 +68,20 @@ export default async function Home() {
           menggantikan pesan berantai dan tautan Drive yang tidak bisa dibuka.
         </p>
 
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/login" className="btn-primary">
-            Masuk dengan Google
-          </Link>
-          <Link href="/privacy" className="btn-ghost">
-            Kebijakan privasi
-          </Link>
+        {message && (
+          <p className="mt-7 max-w-md rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-300">
+            {message}
+          </p>
+        )}
+
+        <div className="mt-8 max-w-xs">
+          <GoogleSignInButton next={tujuan} variant="primary" />
         </div>
 
+        <p className="mt-3 text-sm text-ink-400">
+          Tidak perlu mendaftar. Akun dibuat otomatis sebagai PIC saat pertama
+          kali masuk.
+        </p>
 
         <ol className="mt-16 grid gap-4 sm:grid-cols-2">
           {LANGKAH.map((l, i) => (
@@ -84,9 +103,6 @@ export default async function Home() {
           <span>pantau-upload</span>
           <Link href="/privacy" className="transition hover:text-ink-100">
             Kebijakan privasi
-          </Link>
-          <Link href="/login" className="transition hover:text-ink-100">
-            Masuk
           </Link>
         </div>
       </footer>

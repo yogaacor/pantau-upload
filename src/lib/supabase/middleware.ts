@@ -1,8 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/** Halaman yang boleh dibuka tanpa login. */
-const PUBLIC_PREFIXES = ["/login", "/auth", "/privacy"];
+/**
+ * Halaman yang boleh dibuka tanpa login. Tidak ada halaman /login
+ * tersendiri — beranda "/" yang menampung tombol masuk, dan tombol itu
+ * melompat langsung ke Google.
+ */
+const PUBLIC_PREFIXES = ["/auth", "/privacy"];
 const PUBLIC_EXACT = ["/"];
 
 export async function updateSession(request: NextRequest) {
@@ -52,7 +56,8 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/";
+    url.search = "";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
