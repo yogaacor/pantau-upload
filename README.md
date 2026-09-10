@@ -1,36 +1,198 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# pantau-upload
 
-## Getting Started
+Antrian permintaan upload video YouTube. PIC mengisi request dan mengunggah
+videonya lewat website; file-nya masuk langsung ke folder Google Drive admin.
+Admin mengerjakan uploadnya manual di YouTube Studio, lalu menempelkan link
+hasilnya — PIC melihat statusnya di dashboard.
 
-First, run the development server:
+## Alur
+
+```
+PIC buat request ──▶ upload video (browser ──▶ Drive)
+                          │
+                          ▼
+                     status: Baru
+                          │
+        admin buka file lewat tombol "Buka di Drive"
+                          │
+                          ▼
+                   status: Diproses ──▶ (Perlu revisi ──▶ balik ke PIC)
+                          │
+        admin upload manual ke YouTube, tempel linknya
+                          │
+                          ▼
+                   status: Selesai ──▶ hapus file mentah dari Drive
+```
+
+Yang perlu digarisbawahi: **byte videonya tidak pernah lewat server ini.**
+Server hanya menerbitkan *resumable session URI* dari Google, lalu browser PIC
+mengirim file langsung ke Drive per potongan 8 MB. Hosting gratisan pun kuat
+walau videonya beberapa GB, dan kalau koneksi putus upload dilanjutkan dari
+byte terakhir, bukan mengulang dari nol.
+
+## Yang dibutuhkan
+
+- Node.js 20+
+- Akun Supabase (gratis) — database + login Google
+- Google Cloud project — akses Drive
+- Folder Drive tujuan
+
+---
+
+## Setup
+
+### 1. Supabase
+
+1. Buat project baru di [supabase.com](https://supabase.com).
+2. Buka **SQL Editor**, tempel seluruh isi [`supabase/schema.sql`](supabase/schema.sql), jalankan.
+3. Buka **Project Settings → API**, salin `Project URL` dan `anon public key`.
+
+### 2. Google Cloud (OAuth)
+
+1. Buat project di [console.cloud.google.com](https://console.cloud.google.com).
+2. **APIs & Services → Library** → aktifkan **Google Drive API**.
+3. **OAuth consent screen**:
+   - User type: External
+   - Isi nama aplikasi & email
+   - Tambahkan scope `https://www.googleapis.com/auth/drive`
+   - **Publish app** (jangan biarkan di mode Testing — refresh token di mode
+     Testing kedaluwarsa tiap 7 hari)
+4. **Credentials → Create Credentials → OAuth client ID** → *Web application*.
+
+   Authorized redirect URIs — masukkan ketiganya:
+
+   ```
+   https://<PROJECT>.supabase.co/auth/v1/callback
+   http://localhost:5175/callback
+   ```
+
+5. Salin **Client ID** dan **Client secret**.
+
+### 3. Sambungkan login Google ke Supabase
+
+Di dashboard Supabase: **Authentication → Sign In / Providers → Google** →
+aktifkan, tempel Client ID & Client secret yang sama dari langkah 2.
+
+Di **Authentication → URL Configuration**, tambahkan Redirect URL:
+
+```
+http://localhost:3000/**
+https://<domain-produksi-kamu>/**
+```
+
+### 4. Isi environment
+
+```bash
+cp .env.example .env.local
+```
+
+Isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+
+`DRIVE_FOLDER_ID` sudah terisi dengan folder tujuan. Kalau mau ganti, ambil
+dari URL folder Drive: `https://drive.google.com/drive/folders/<ID INI>`.
+
+### 5. Ambil refresh token Drive
+
+```bash
+npm run drive:token
+```
+
+Buka link yang tercetak, login dengan **akun pemilik folder Drive**. Kalau
+muncul layar *"Google hasn't verified this app"*, klik **Advanced → Go to …
+(unsafe)** — normal untuk aplikasi internal yang belum lewat verifikasi.
+
+Tempel `GOOGLE_REFRESH_TOKEN` yang tercetak ke `.env.local`.
+
+Lalu pastikan semuanya nyambung:
+
+```bash
+npm run drive:check
+```
+
+Skrip ini menukar token, membaca folder tujuan, menulis file uji, lalu
+menghapusnya lagi. Kalau ketiganya lolos, upload dari website pasti jalan.
+
+### 6. Daftarkan dirimu sebagai admin
+
+Login pertama kali hanya bisa kalau emailmu sudah ada di tabel `allowlist`.
+Jalankan di Supabase SQL Editor:
+
+```sql
+insert into public.allowlist (email, role, divisi)
+values ('email-kamu@gmail.com', 'admin', null);
+```
+
+Setelah itu anggota lain bisa kamu tambahkan lewat menu **Anggota** di web.
+
+### 7. Jalankan
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy ke Vercel
 
-## Learn More
+1. Push repo ini ke GitHub, import di Vercel.
+2. Salin semua isi `.env.local` ke **Settings → Environment Variables**.
+3. Tambahkan domain produksi ke:
+   - Supabase → Authentication → URL Configuration → Redirect URLs
+   - Google Cloud → OAuth client → Authorized redirect URIs (kalau berubah)
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Catatan operasional
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Kuota Drive.** File-file ini dimiliki akun Google kamu, jadi memakan jatah
+15 GB. Setelah status `Selesai`, tombol **Hapus file dari Drive** muncul di
+panel admin — link YouTube-nya tetap tersimpan, yang hilang hanya file
+mentahnya. Biasakan membersihkan supaya kuota tidak habis.
 
-## Deploy on Vercel
+**Batas ukuran file.** Default 5 GB per file, diatur lewat `MAX_UPLOAD_BYTES`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Kenapa upload YouTube-nya manual.** YouTube Data API hanya memberi kuota
+sekitar 6 upload per hari, dan video yang diunggah aplikasi belum terverifikasi
+otomatis dikunci jadi *private*. Upload manual lewat YouTube Studio jauh lebih
+praktis; yang diotomasi di sini adalah antrian dan pencatatannya.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Siapa boleh apa.**
+
+| | PIC | Admin |
+|---|---|---|
+| Buat request | ✓ | ✓ |
+| Ubah request | hanya miliknya, saat status Baru / Perlu revisi | ✓ |
+| Upload file | hanya miliknya, saat status Baru / Perlu revisi | ✓ |
+| Ubah status | — | ✓ |
+| Tempel link YouTube | — | ✓ |
+| Hapus file Drive | — | ✓, hanya saat status Selesai |
+| Kelola anggota | — | ✓ |
+
+Aturan ini dipaksakan dua lapis: di route handler dan lewat Row Level Security
+di Postgres, jadi tidak bisa ditembus dari client.
+
+## Struktur
+
+```
+src/
+  app/
+    admin/                antrian admin + kelola anggota
+    dashboard/            daftar & pembuatan request milik PIC
+    request/[id]/         detail request, upload, riwayat
+    api/
+      requests/           CRUD request, komentar
+      drive/session       terbitkan resumable session URI
+      drive/attach        catat fileId setelah upload selesai
+      drive/delete        bersihkan file mentah dari Drive
+    auth/                 callback OAuth & signout
+  components/             UI
+  lib/
+    google.ts             helper Drive (token, session, hapus)
+    upload.ts             upload resumable dari browser
+    supabase/             client server, browser, dan proxy
+supabase/schema.sql       tabel, trigger, dan policy RLS
+scripts/                  ambil refresh token & uji koneksi Drive
+```
