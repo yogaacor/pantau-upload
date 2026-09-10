@@ -6,6 +6,17 @@ const PUBLIC_PREFIXES = ["/login", "/auth", "/privacy"];
 const PUBLIC_EXACT = ["/"];
 
 export async function updateSession(request: NextRequest) {
+  // Kalau Redirect URL belum terdaftar di Supabase, kode otorisasi
+  // dilempar ke Site URL (akar situs) alih-alih ke /auth/callback.
+  // Teruskan sendiri supaya login tetap selesai, bukan berhenti dengan
+  // ?code= menggantung di URL.
+  if (request.nextUrl.pathname === "/" && request.nextUrl.searchParams.has("code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    url.searchParams.set("next", "/");
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

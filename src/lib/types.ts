@@ -19,6 +19,7 @@ export type Profile = {
   avatar_url: string | null;
   divisi: string | null;
   role: Role;
+  blocked: boolean;
   created_at: string;
 };
 

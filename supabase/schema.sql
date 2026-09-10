@@ -5,7 +5,12 @@
 create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------------
--- allowlist: hanya email di tabel ini yang boleh dipakai login
+-- allowlist: pra-penetapan peran & divisi.
+--
+-- Pendaftaran terbuka: siapa pun yang login dengan Google otomatis
+-- menjadi PIC. Tabel ini tidak lagi menjadi gerbang masuk, melainkan
+-- dipakai untuk menetapkan peran admin (dan divisi) lebih dulu, sebelum
+-- orangnya pertama kali login.
 -- ---------------------------------------------------------------------
 create table if not exists public.allowlist (
   email      text primary key,
@@ -26,6 +31,11 @@ create table if not exists public.profiles (
   role       text not null default 'pic' check (role in ('pic', 'admin')),
   created_at timestamptz not null default now()
 );
+
+-- Akun yang diblokir admin: masih bisa login, tapi tidak bisa membuat
+-- atau mengubah apa pun. Dipakai sebagai rem karena pendaftaran terbuka.
+alter table public.profiles
+  add column if not exists blocked boolean not null default false;
 
 -- ---------------------------------------------------------------------
 -- requests: satu baris = satu permintaan upload
@@ -109,7 +119,23 @@ set search_path = public
 as $fn$
   select exists (
     select 1 from public.profiles
-    where id = auth.uid() and role = 'admin'
+    where id = auth.uid() and role = 'admin' and not blocked
+  );
+$fn$;
+
+-- Akun aktif = sudah punya profile dan tidak diblokir. Dipakai pada
+-- policy tulis, sehingga akun yang diblokir tidak bisa membuat request
+-- baru walau masih bisa login.
+create or replace function public.is_active()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and not blocked
   );
 $fn$;
 
@@ -149,8 +175,11 @@ create trigger trg_requests_touch
   for each row execute function public.touch_updated_at();
 
 -- Buat profile otomatis saat user pertama kali login lewat Google.
--- Role & divisi diambil dari allowlist. Kalau email tidak terdaftar,
--- login digagalkan di sini supaya orang luar tidak bisa masuk.
+--
+-- Pendaftaran terbuka: email yang tidak dikenal tetap diterima dan
+-- langsung menjadi PIC. Kalau emailnya sudah tercantum di allowlist,
+-- peran dan divisi dari sana yang dipakai — inilah cara menjadikan
+-- seseorang admin sebelum ia pertama kali login.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -162,10 +191,6 @@ declare
 begin
   select * into entry from public.allowlist where lower(email) = lower(new.email);
 
-  if not found then
-    raise exception 'Email % belum terdaftar di allowlist pantau-upload', new.email;
-  end if;
-
   insert into public.profiles (id, email, full_name, avatar_url, divisi, role)
   values (
     new.id,
@@ -175,7 +200,7 @@ begin
              new.email),
     new.raw_user_meta_data ->> 'avatar_url',
     entry.divisi,
-    entry.role
+    coalesce(entry.role, 'pic')
   )
   on conflict (id) do nothing;
 
@@ -202,9 +227,13 @@ drop policy if exists profiles_select on public.profiles;
 create policy profiles_select on public.profiles
   for select using (id = auth.uid() or public.is_admin());
 
+-- Hanya admin yang boleh mengubah profile — termasuk menaikkan peran dan
+-- memblokir. Policy lama mengizinkan setiap orang mengubah barisnya
+-- sendiri, yang berarti siapa pun bisa menyetel role-nya menjadi 'admin'.
 drop policy if exists profiles_update_self on public.profiles;
-create policy profiles_update_self on public.profiles
-  for update using (id = auth.uid()) with check (id = auth.uid());
+drop policy if exists profiles_update on public.profiles;
+create policy profiles_update on public.profiles
+  for update using (public.is_admin()) with check (public.is_admin());
 
 -- requests ------------------------------------------------------------
 drop policy if exists requests_select on public.requests;
@@ -213,7 +242,7 @@ create policy requests_select on public.requests
 
 drop policy if exists requests_insert on public.requests;
 create policy requests_insert on public.requests
-  for insert with check (requester_id = auth.uid());
+  for insert with check (requester_id = auth.uid() and public.is_active());
 
 -- PIC hanya boleh mengubah request miliknya selama masih 'baru' atau
 -- 'revisi'. Admin bebas.
@@ -222,11 +251,11 @@ create policy requests_update on public.requests
   for update
   using (
     public.is_admin()
-    or (requester_id = auth.uid() and status in ('baru', 'revisi'))
+    or (requester_id = auth.uid() and status in ('baru', 'revisi') and public.is_active())
   )
   with check (
     public.is_admin()
-    or (requester_id = auth.uid() and status in ('baru', 'revisi'))
+    or (requester_id = auth.uid() and status in ('baru', 'revisi') and public.is_active())
   );
 
 drop policy if exists requests_delete on public.requests;
@@ -251,6 +280,7 @@ drop policy if exists events_insert on public.request_events;
 create policy events_insert on public.request_events
   for insert with check (
     actor_id = auth.uid()
+    and public.is_active()
     and (
       public.is_admin()
       or exists (

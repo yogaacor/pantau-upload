@@ -39,10 +39,20 @@ export default async function DashboardPage() {
                   } masih berjalan`}
             </p>
           </div>
-          <Link href="/dashboard/baru" className="btn-primary">
-            + Request baru
-          </Link>
+          {!profile.blocked && (
+            <Link href="/dashboard/baru" className="btn-primary">
+              + Request baru
+            </Link>
+          )}
         </div>
+
+        {profile.blocked && (
+          <p className="mb-6 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+            Akunmu diblokir admin. Kamu masih bisa melihat request lama, tapi
+            tidak bisa membuat atau mengubah apa pun. Hubungi admin kalau ini
+            keliru.
+          </p>
+        )}
 
         {rows.some((r) => r.status === "revisi") && (
           <p className="mb-6 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">

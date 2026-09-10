@@ -48,7 +48,12 @@ export function AllowlistManager({
   }
 
   async function hapus(target: string) {
-    if (!window.confirm(`Cabut akses ${target}?`)) return;
+    if (
+      !window.confirm(
+        `Hapus penetapan untuk ${target}? Perannya yang sekarang tidak berubah.`,
+      )
+    )
+      return;
     setError(null);
 
     const res = await fetch(`/api/allowlist?email=${encodeURIComponent(target)}`, {
@@ -65,7 +70,7 @@ export function AllowlistManager({
   return (
     <div className="space-y-6">
       <form onSubmit={tambah} className="card p-5">
-        <h2 className="mb-4 text-sm font-semibold">Tambah anggota</h2>
+        <h2 className="mb-4 text-sm font-semibold">Tambah penetapan</h2>
 
         <div className="grid gap-4 sm:grid-cols-[2fr_1fr_auto]">
           <div>
@@ -145,7 +150,7 @@ export function AllowlistManager({
                   </span>
                 </td>
                 <td className="px-4 py-3 text-xs text-ink-400">
-                  {r.terdaftar ? "sudah pernah login" : "belum login"}
+                  {r.terdaftar ? "sudah diterapkan" : "menunggu login pertama"}
                 </td>
                 <td className="px-4 py-3 text-right">
                   {r.email.toLowerCase() !== selfEmail.toLowerCase() && (
@@ -153,7 +158,7 @@ export function AllowlistManager({
                       onClick={() => hapus(r.email)}
                       className="text-xs text-rose-400 underline-offset-2 hover:underline"
                     >
-                      Cabut
+                      Hapus
                     </button>
                   )}
                 </td>

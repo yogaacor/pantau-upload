@@ -7,6 +7,7 @@ import { getSessionProfile } from "@/lib/supabase/server";
 export default async function RequestBaruPage() {
   const profile = await getSessionProfile();
   if (!profile) redirect("/login");
+  if (profile.blocked) redirect("/dashboard");
 
   return (
     <>

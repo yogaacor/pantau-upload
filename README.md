@@ -131,17 +131,27 @@ npm run drive:check
 Skrip ini menukar token, membaca folder tujuan, menulis file uji, lalu
 menghapusnya lagi. Kalau ketiganya lolos, upload dari website pasti jalan.
 
-### 7. Daftarkan dirimu sebagai admin
+### 7. Tetapkan dirimu sebagai admin
 
-Login pertama kali hanya bisa kalau emailmu sudah ada di tabel `allowlist`.
-Jalankan di Supabase SQL Editor:
+Pendaftaran terbuka: siapa pun yang masuk dengan Google otomatis menjadi PIC.
+Yang tidak otomatis adalah peran admin. Sebelum login pertama, jalankan ini di
+Supabase SQL Editor:
 
 ```sql
 insert into public.allowlist (email, role, divisi)
-values ('email-kamu@gmail.com', 'admin', null);
+values ('email-kamu@gmail.com', 'admin', null)
+on conflict (email) do update set role = 'admin';
 ```
 
-Setelah itu anggota lain bisa kamu tambahkan lewat menu **Anggota** di web.
+Kalau kamu sudah pernah login sebagai PIC, naikkan langsung di tabel
+`profiles`:
+
+```sql
+update public.profiles set role = 'admin' where email = 'email-kamu@gmail.com';
+```
+
+Setelah jadi admin, peran anggota lain bisa diubah lewat menu **Anggota** di
+web tanpa menyentuh SQL lagi.
 
 ### 8. Jalankan
 
@@ -177,17 +187,29 @@ sekitar 6 upload per hari, dan video yang diunggah aplikasi belum terverifikasi
 otomatis dikunci jadi *private*. Upload manual lewat YouTube Studio jauh lebih
 praktis; yang diotomasi di sini adalah antrian dan pencatatannya.
 
+**Pendaftaran terbuka.** Tidak ada gerbang di depan: siapa pun dengan akun
+Google bisa masuk dan langsung menjadi PIC. Konsekuensinya orang luar juga
+bisa membuat request dan mengunggah berkas ke folder Drive. Remnya ada di menu
+**Anggota** — tombol **Blokir** membuat akun itu masih bisa login dan melihat
+request lamanya, tapi tidak bisa lagi membuat atau mengubah apa pun. Blokir
+ditegakkan lewat Row Level Security, bukan hanya disembunyikan di UI.
+
+Sisi lain dari pendaftaran terbuka: sesekali tengok menu Anggota. Tidak ada
+notifikasi saat orang baru masuk.
+
 **Siapa boleh apa.**
 
 | | PIC | Admin |
 |---|---|---|
-| Buat request | ✓ | ✓ |
+| Masuk & jadi anggota | otomatis, tanpa persetujuan | — |
+| Buat request | ✓ (kecuali diblokir) | ✓ |
 | Ubah request | hanya miliknya, saat status Baru / Perlu revisi | ✓ |
 | Upload file | hanya miliknya, saat status Baru / Perlu revisi | ✓ |
 | Ubah status | — | ✓ |
 | Tempel link YouTube | — | ✓ |
 | Hapus file Drive | — | ✓, hanya saat status Selesai |
-| Kelola anggota | — | ✓ |
+| Blokir / buka blokir anggota | — | ✓ |
+| Ubah peran anggota | — | ✓ |
 
 Aturan ini dipaksakan dua lapis: di route handler dan lewat Row Level Security
 di Postgres, jadi tidak bisa ditembus dari client.

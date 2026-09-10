@@ -8,7 +8,7 @@ export function TopNav({ profile }: { profile: Profile }) {
     ? [
         { href: "/admin", label: "Antrian" },
         { href: "/dashboard", label: "Request saya" },
-        { href: "/admin/allowlist", label: "Anggota" },
+        { href: "/admin/anggota", label: "Anggota" },
       ]
     : [
         { href: "/dashboard", label: "Request saya" },

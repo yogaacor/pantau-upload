@@ -6,8 +6,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const ERROR_TEXT: Record<string, string> = {
-  "tidak-terdaftar":
-    "Email kamu belum terdaftar. Minta admin menambahkan emailmu dulu.",
+  "tidak-terdaftar": "Login gagal disimpan. Coba ulangi.",
   nocode: "Proses login terputus. Coba ulangi.",
 };
 
@@ -82,7 +81,8 @@ function LoginCard() {
       </button>
 
       <p className="mt-6 text-xs leading-relaxed text-ink-400">
-        Hanya email yang sudah didaftarkan admin yang bisa masuk.
+        Belum punya akun? Tidak perlu mendaftar — masuk saja dengan Google,
+        akunmu dibuat otomatis sebagai PIC.
       </p>
     </div>
   );
