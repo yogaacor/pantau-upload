@@ -63,10 +63,6 @@ export default async function Home() {
           </Link>
         </div>
 
-        <p className="mt-4 text-sm text-ink-400">
-          Tidak perlu mendaftar. Masuk dengan akun Google, akunmu langsung
-          dibuat sebagai PIC.
-        </p>
 
         <ol className="mt-16 grid gap-4 sm:grid-cols-2">
           {LANGKAH.map((l, i) => (
