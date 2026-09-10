@@ -107,17 +107,6 @@ exception
 end
 $add_jenis_check$;
 
--- Kiriman Zoom terdiri dari dua berkas (…_01.zoom dan …_02.zoom) yang
--- namanya TIDAK boleh diubah, karena konverter Zoom bergantung padanya.
--- Supaya nama yang sama dari banyak PIC tidak bertumpuk jadi satu, tiap
--- kiriman Zoom mendapat subfolder sendiri di dalam folder tujuan.
-alter table public.requests
-  add column if not exists drive_folder_id text;
-
-alter table public.requests
-  add column if not exists file2_id   text,
-  add column if not exists file2_name text,
-  add column if not exists file2_size bigint;
 
 -- ---------------------------------------------------------------------
 -- request_events: jejak aktivitas + thread komentar

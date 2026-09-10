@@ -8,11 +8,9 @@ import { UploadAbortedError, uploadToDrive } from "@/lib/upload";
 
 type Props = {
   requestId: string;
-  kind?: "video" | "file2" | "thumb";
+  kind?: "video" | "thumb";
   /** Menentukan format apa yang boleh dipilih untuk berkas utama. */
   jenis?: Jenis;
-  /** Teks tombol, mis. nama berkas yang diharapkan. */
-  label?: string;
   currentName?: string | null;
   currentSize?: number | null;
   disabled?: boolean;
@@ -24,7 +22,6 @@ export function DriveUploader({
   requestId,
   kind = "video",
   jenis = "video",
-  label: labelProp,
   currentName,
   currentSize,
   disabled,
@@ -110,12 +107,7 @@ export function DriveUploader({
   }
 
   const label =
-    labelProp ??
-    (kind === "thumb"
-      ? "thumbnail"
-      : jenis === "zoom"
-        ? "rekaman Zoom"
-        : "video");
+    kind === "thumb" ? "thumbnail" : jenis === "zoom" ? "arsip .zip" : "video";
 
   return (
     <div>

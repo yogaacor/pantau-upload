@@ -58,8 +58,6 @@ export async function createResumableSession(opts: {
   mimeType: string;
   size: number;
   origin: string;
-  /** Folder tujuan; default folder utama dari DRIVE_FOLDER_ID. */
-  parentId?: string;
 }): Promise<string> {
   const token = await getAccessToken();
 
@@ -75,7 +73,7 @@ export async function createResumableSession(opts: {
     body: JSON.stringify({
       name: opts.name,
       mimeType: opts.mimeType,
-      parents: [opts.parentId || requireEnv("DRIVE_FOLDER_ID")],
+      parents: [requireEnv("DRIVE_FOLDER_ID")],
     }),
     cache: "no-store",
   });
@@ -143,42 +141,6 @@ export async function getFileMeta(fileId: string): Promise<DriveFileMeta | null>
     mimeType: json.mimeType,
     trashed: json.trashed,
   };
-}
-
-const FOLDER_MIME = "application/vnd.google-apps.folder";
-
-/**
- * Buat subfolder di dalam folder tujuan dan kembalikan id-nya.
- *
- * Dipakai kiriman Zoom, yang berkasnya harus mempertahankan nama asli
- * (`double_click_to_convert_01.zoom`) supaya konverter Zoom mengenalinya.
- * Tanpa subfolder, kiriman dari banyak PIC akan bertumpuk dengan nama
- * yang persis sama di satu folder.
- */
-export async function createSubfolder(name: string): Promise<string> {
-  const token = await getAccessToken();
-
-  const res = await fetch(`${FILES_URL}?fields=id&supportsAllDrives=true`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name,
-      mimeType: FOLDER_MIME,
-      parents: [requireEnv("DRIVE_FOLDER_ID")],
-    }),
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error(`Gagal membuat subfolder Drive: ${await res.text()}`);
-  }
-
-  const json = (await res.json()) as { id: string };
-  return json.id;
-}
-
-export function driveFolderUrl(folderId: string): string {
-  return `https://drive.google.com/drive/folders/${folderId}`;
 }
 
 export function driveViewUrl(fileId: string): string {

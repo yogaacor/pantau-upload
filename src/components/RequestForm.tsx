@@ -23,7 +23,7 @@ const PILIHAN_JENIS: {
   {
     jenis: "zoom",
     judul: "Rekaman Zoom mentah",
-    isi: "Belum dikonversi karena penyimpanan penuh. Kirim folder rekaman dalam .zip, atau dua berkas .zoom-nya. Admin yang mengonversi.",
+    isi: "Belum dikonversi karena penyimpanan penuh. Kirim folder rekamannya dalam satu .zip — admin yang mengonversi.",
   },
 ];
 

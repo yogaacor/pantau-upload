@@ -6,14 +6,13 @@ import { DriveUploader } from "@/components/DriveUploader";
 import { JenisBadge } from "@/components/JenisBadge";
 import { AdminPanel } from "@/components/AdminPanel";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
-import { driveFolderUrl, driveViewUrl } from "@/lib/google";
+import { driveViewUrl } from "@/lib/google";
 import {
   formatBytes,
   formatDateTime,
   timeAgo,
   youtubeThumb,
 } from "@/lib/format";
-import { ZOOM_FILES } from "@/lib/types";
 import type { RequestEvent, RequestWithRequester } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -124,143 +123,63 @@ export default async function RequestDetailPage({
 
             <div className="card p-5">
               <h2 className="mb-4 text-sm font-semibold">
-                {row.jenis === "zoom"
-                  ? "Berkas rekaman Zoom (belum dikonversi)"
-                  : "File video"}
+                {row.jenis === "zoom" ? "Arsip rekaman Zoom" : "File video"}
               </h2>
 
               {row.jenis === "zoom" && !row.drive_deleted_at && (
                 <div className="mb-5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-4 py-3.5 text-xs leading-relaxed text-violet-100">
-                  <p className="mb-3 font-medium">
-                    Kirim dengan salah satu cara berikut:
-                  </p>
-
-                  <p className="mb-1">
-                    <span className="font-medium">Cara 1 — paling gampang.</span>{" "}
+                  <p className="font-medium">
                     Kompres seluruh folder rekaman jadi satu berkas{" "}
-                    <code className="rounded bg-violet-500/20 px-1 py-0.5">
-                      .zip
-                    </code>
-                    , lalu taruh di Berkas 1. Berkas 2 dikosongkan saja.
+                    <code className="rounded bg-violet-500/20 px-1 py-0.5">.zip</code>, lalu unggah di sini.
                   </p>
-
-                  <p className="mt-3 mb-1">
-                    <span className="font-medium">Cara 2.</span> Kirim dua
-                    berkasnya langsung:
-                  </p>
-                  <ul className="mt-1 space-y-1">
-                    {ZOOM_FILES.map((f, i) => (
-                      <li key={f} className="flex gap-2">
-                        <span className="text-violet-300">Berkas {i + 1}</span>
-                        <code className="rounded bg-violet-500/20 px-1 py-0.5">
-                          {f}
-                        </code>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <p className="mt-3 border-t border-violet-500/25 pt-3">
-                    <span className="font-medium">Jangan ubah nama berkasnya.</span>{" "}
-                    Konverter Zoom mengenali rekaman dari penamaan aslinya, jadi
-                    nama yang diubah bisa membuatnya gagal dikonversi. Berkasmu
-                    disimpan apa adanya di folder tersendiri.
+                  <p className="mt-2.5">
+                    Kirim foldernya utuh — jangan pilih-pilih isinya dan jangan
+                    ubah nama berkas di dalamnya. Konverter Zoom mengenali
+                    rekaman dari penamaan aslinya, jadi isi yang berubah bisa
+                    gagal dikonversi.
                   </p>
                 </div>
               )}
 
-              {row.drive_deleted_at ? (
+              {row.drive_file_id ? (
+                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-ink-800 bg-ink-850/50 p-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm">{row.drive_file_name}</p>
+                    <p className="mt-0.5 text-xs text-ink-400">
+                      {formatBytes(row.drive_file_size)} · {row.drive_mime}
+                    </p>
+                  </div>
+                  <a
+                    href={driveViewUrl(row.drive_file_id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-primary"
+                  >
+                    Buka di Drive
+                  </a>
+                </div>
+              ) : row.drive_deleted_at ? (
                 <p className="rounded-lg border border-ink-800 bg-ink-850/50 p-3.5 text-sm text-ink-400">
                   Berkas mentah sudah dihapus dari Drive pada{" "}
                   {formatDateTime(row.drive_deleted_at)} — videonya sudah tayang
                   di YouTube.
                 </p>
-              ) : row.jenis === "zoom" ? (
-                <div className="space-y-5">
-                  {row.drive_folder_id && (
-                    <a
-                      href={driveFolderUrl(row.drive_folder_id)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-primary"
-                    >
-                      Buka folder di Drive
-                    </a>
-                  )}
-
-                  <SlotBerkas
-                    judul="Berkas 1"
-                    petunjuk={`Folder rekaman dalam .zip, atau ${ZOOM_FILES[0]}`}
-                    fileId={row.drive_file_id}
-                    fileName={row.drive_file_name}
-                    fileSize={row.drive_file_size}
-                  />
-                  {(dapatEdit || isAdmin) && (
-                    <DriveUploader
-                      requestId={row.id}
-                      jenis={row.jenis}
-                      label="Berkas 1"
-                      currentName={row.drive_file_name}
-                      currentSize={row.drive_file_size}
-                    />
-                  )}
-
-                  <div className="border-t border-ink-800 pt-5">
-                    <SlotBerkas
-                      judul="Berkas 2 — opsional"
-                      petunjuk={`${ZOOM_FILES[1]}. Lewati kalau kamu mengirim .zip`}
-                      fileId={row.file2_id}
-                      fileName={row.file2_name}
-                      fileSize={row.file2_size}
-                    />
-                    {(dapatEdit || isAdmin) && (
-                      <DriveUploader
-                        requestId={row.id}
-                        kind="file2"
-                        jenis={row.jenis}
-                        label="Berkas 2"
-                        currentName={row.file2_name}
-                        currentSize={row.file2_size}
-                      />
-                    )}
-                  </div>
-                </div>
               ) : (
-                <>
-                  {row.drive_file_id ? (
-                    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-ink-800 bg-ink-850/50 p-3.5">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm">{row.drive_file_name}</p>
-                        <p className="mt-0.5 text-xs text-ink-400">
-                          {formatBytes(row.drive_file_size)} · {row.drive_mime}
-                        </p>
-                      </div>
-                      <a
-                        href={driveViewUrl(row.drive_file_id)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-primary"
-                      >
-                        Buka di Drive
-                      </a>
-                    </div>
-                  ) : (
-                    <p className="mb-4 text-sm text-ink-400">
-                      Belum ada file. Upload di bawah ini; file akan langsung
-                      masuk ke folder Drive admin.
-                    </p>
-                  )}
+                <p className="mb-4 text-sm text-ink-400">
+                  Belum ada berkas. Unggah di bawah ini; berkasnya langsung
+                  masuk ke folder Drive admin.
+                </p>
+              )}
 
-                  {(dapatEdit || isAdmin) && (
-                    <div className="mt-4">
-                      <DriveUploader
-                        requestId={row.id}
-                        jenis={row.jenis}
-                        currentName={row.drive_file_name}
-                        currentSize={row.drive_file_size}
-                      />
-                    </div>
-                  )}
-                </>
+              {(dapatEdit || (isAdmin && !row.drive_deleted_at)) && (
+                <div className="mt-4">
+                  <DriveUploader
+                    requestId={row.id}
+                    jenis={row.jenis}
+                    currentName={row.drive_file_name}
+                    currentSize={row.drive_file_size}
+                  />
+                </div>
               )}
             </div>
 
@@ -328,55 +247,5 @@ export default async function RequestDetailPage({
         </div>
       </main>
     </>
-  );
-}
-
-/**
- * Satu slot berkas pada kiriman Zoom: menampilkan apa yang sudah masuk,
- * atau petunjuk berkas apa yang diharapkan kalau masih kosong.
- */
-function SlotBerkas({
-  judul,
-  petunjuk,
-  fileId,
-  fileName,
-  fileSize,
-}: {
-  judul: string;
-  petunjuk: string;
-  fileId: string | null;
-  fileName: string | null;
-  fileSize: number | null;
-}) {
-  return (
-    <div className="mb-3">
-      <div className="mb-2 flex flex-wrap items-baseline gap-x-2">
-        <span className="text-sm font-medium">{judul}</span>
-        <span className="text-xs text-ink-400">{petunjuk}</span>
-      </div>
-
-      {fileId ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-ink-800 bg-ink-850/50 p-3.5">
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-mono text-xs">{fileName}</p>
-            <p className="mt-0.5 text-xs text-ink-400">
-              {formatBytes(fileSize)}
-            </p>
-          </div>
-          <a
-            href={driveViewUrl(fileId)}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-ghost px-3 py-1.5 text-xs"
-          >
-            Buka
-          </a>
-        </div>
-      ) : (
-        <p className="rounded-lg border border-dashed border-ink-800 px-3.5 py-2.5 text-xs text-ink-400">
-          Belum ada berkas.
-        </p>
-      )}
-    </div>
   );
 }
