@@ -7,17 +7,16 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/";
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/?error=nocode`);
+    return NextResponse.redirect(`${origin}/login?error=nocode`);
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    // Trigger handle_new_user() menolak email di luar allowlist, dan
-    // penolakan itu muncul sebagai error di sini.
+    console.error("[Auth Callback Error]:", error);
     return NextResponse.redirect(
-      `${origin}/?error=${encodeURIComponent("tidak-terdaftar")}`,
+      `${origin}/login?error=${encodeURIComponent(error.message || "tidak-terdaftar")}`,
     );
   }
 

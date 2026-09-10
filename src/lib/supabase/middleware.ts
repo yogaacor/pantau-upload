@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * tersendiri — beranda "/" yang menampung tombol masuk, dan tombol itu
  * melompat langsung ke Google.
  */
-const PUBLIC_PREFIXES = ["/auth", "/privacy"];
+const PUBLIC_PREFIXES = ["/auth", "/privacy", "/login"];
 const PUBLIC_EXACT = ["/"];
 
 export async function updateSession(request: NextRequest) {
