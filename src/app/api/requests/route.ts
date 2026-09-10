@@ -1,7 +1,8 @@
 import { ApiError, handle, logEvent, requireActor } from "@/lib/api";
-import type { Privacy } from "@/lib/types";
+import { JENIS_LABEL, type Jenis, type Privacy } from "@/lib/types";
 
 type Body = {
+  jenis?: Jenis;
   judul?: string;
   deskripsi?: string;
   tags?: string[];
@@ -23,10 +24,13 @@ export async function POST(request: Request) {
     const judul = body.judul?.trim();
     if (!judul) throw new ApiError(400, "Judul wajib diisi");
 
+    const jenis: Jenis = body.jenis === "zoom" ? "zoom" : "video";
+
     const { data, error } = await actor.supabase
       .from("requests")
       .insert({
         requester_id: actor.profile.id,
+        jenis,
         judul,
         deskripsi: body.deskripsi?.trim() || null,
         tags: body.tags?.filter(Boolean) ?? [],
@@ -48,7 +52,7 @@ export async function POST(request: Request) {
       request_id: data.id,
       type: "dibuat",
       to_status: "baru",
-      message: `Request dibuat: ${judul}`,
+      message: `Request dibuat (${JENIS_LABEL[jenis]}): ${judul}`,
     });
 
     return { id: data.id as string, kode: data.kode as string | null };

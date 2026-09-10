@@ -2,12 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { RequestRow } from "@/lib/types";
+import type { Jenis, RequestRow } from "@/lib/types";
 
 type Values = {
+  jenis: Jenis;
   judul: string;
   catatan: string;
 };
+
+const PILIHAN_JENIS: {
+  jenis: Jenis;
+  judul: string;
+  isi: string;
+}[] = [
+  {
+    jenis: "video",
+    judul: "Video sudah jadi",
+    isi: "Berkas video final, tinggal diunggah apa adanya.",
+  },
+  {
+    jenis: "zoom",
+    judul: "Rekaman Zoom mentah",
+    isi: "Belum dikonversi karena penyimpanan penuh. Admin yang mengonversi.",
+  },
+];
 
 export function RequestForm({ existing }: { existing?: RequestRow }) {
   const router = useRouter();
@@ -15,9 +33,14 @@ export function RequestForm({ existing }: { existing?: RequestRow }) {
   const [error, setError] = useState<string | null>(null);
 
   const [v, setV] = useState<Values>({
+    jenis: existing?.jenis ?? "video",
     judul: existing?.judul ?? "",
     catatan: existing?.catatan ?? "",
   });
+
+  // Jenis dikunci setelah berkasnya masuk, karena berkas yang sudah
+  // terunggah belum tentu cocok dengan jenis yang baru.
+  const jenisTerkunci = !!existing?.drive_file_id;
 
   const set = <K extends keyof Values>(key: K, value: Values[K]) =>
     setV((prev) => ({ ...prev, [key]: value }));
@@ -28,6 +51,7 @@ export function RequestForm({ existing }: { existing?: RequestRow }) {
     setError(null);
 
     const payload = {
+      jenis: v.jenis,
       judul: v.judul,
       deskripsi: existing?.deskripsi ?? null,
       catatan: v.catatan,
@@ -64,7 +88,51 @@ export function RequestForm({ existing }: { existing?: RequestRow }) {
   return (
     <form onSubmit={submit} className="space-y-6">
       <div className="card p-5">
-        <h2 className="mb-4 text-sm font-semibold">Detail video</h2>
+        <h2 className="mb-1 text-sm font-semibold">Jenis kiriman</h2>
+        <p className="mb-4 text-xs text-ink-400">
+          {jenisTerkunci
+            ? "Tidak bisa diubah karena berkasnya sudah diunggah. Ganti berkasnya dulu kalau memang perlu."
+            : "Pilih sesuai kondisi berkas yang kamu punya."}
+        </p>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PILIHAN_JENIS.map((p) => {
+            const aktif = v.jenis === p.jenis;
+            return (
+              <label
+                key={p.jenis}
+                className={`rounded-lg border p-3.5 transition ${
+                  aktif
+                    ? "border-brand-500/60 bg-brand-500/5"
+                    : "border-ink-800 bg-ink-850/40 hover:border-ink-700"
+                } ${jenisTerkunci ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+              >
+                <span className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="jenis"
+                    className="mt-0.5 size-4 accent-brand-500"
+                    checked={aktif}
+                    disabled={jenisTerkunci}
+                    onChange={() => set("jenis", p.jenis)}
+                  />
+                  <span>
+                    <span className="block text-sm font-medium">{p.judul}</span>
+                    <span className="mt-1 block text-xs leading-relaxed text-ink-400">
+                      {p.isi}
+                    </span>
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="card p-5">
+        <h2 className="mb-4 text-sm font-semibold">
+          {v.jenis === "zoom" ? "Detail rekaman" : "Detail video"}
+        </h2>
 
         <div className="space-y-4">
           <div>

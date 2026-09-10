@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TopNav } from "@/components/TopNav";
 import { StatusBadge } from "@/components/StatusBadge";
+import { JenisBadge } from "@/components/JenisBadge";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { formatBytes, timeAgo } from "@/lib/format";
 import { STATUS_ORDER, type RequestRow, type Status } from "@/lib/types";
@@ -84,6 +85,7 @@ export default async function DashboardPage() {
                         {r.kode}
                       </span>
                       <StatusBadge status={r.status} />
+                      {r.jenis === "zoom" && <JenisBadge jenis={r.jenis} />}
                     </div>
                     <p className="mt-1.5 truncate font-medium">{r.judul}</p>
                     <p className="mt-0.5 text-xs text-ink-400">

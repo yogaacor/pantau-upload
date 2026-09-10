@@ -86,6 +86,27 @@ create table if not exists public.requests (
 create index if not exists requests_requester_idx on public.requests (requester_id);
 create index if not exists requests_status_idx    on public.requests (status, created_at desc);
 
+-- Jenis kiriman:
+--   'video' — berkas video yang sudah jadi, siap diunggah apa adanya
+--   'zoom'  — rekaman Zoom mentah yang belum dikonversi, karena
+--             penyimpanan PIC penuh sehingga tidak bisa mengonversi
+--             sendiri. Admin yang mengonversi lalu mengunggahnya.
+--
+-- Ditulis sebagai alter terpisah, bukan bagian create table di atas,
+-- supaya berkas ini tetap aman dijalankan ulang pada database yang
+-- tabelnya sudah ada.
+alter table public.requests
+  add column if not exists jenis text not null default 'video';
+
+do $add_jenis_check$
+begin
+  alter table public.requests
+    add constraint requests_jenis_check check (jenis in ('video', 'zoom'));
+exception
+  when duplicate_object then null;
+end
+$add_jenis_check$;
+
 -- ---------------------------------------------------------------------
 -- request_events: jejak aktivitas + thread komentar
 -- ---------------------------------------------------------------------

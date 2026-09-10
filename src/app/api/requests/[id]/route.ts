@@ -1,11 +1,18 @@
 import { ApiError, handle, logEvent, requireActor } from "@/lib/api";
 import { parseYouTubeId, youtubeWatchUrl } from "@/lib/format";
-import { STATUS_LABEL, type Privacy, type RequestRow, type Status } from "@/lib/types";
+import {
+  STATUS_LABEL,
+  type Jenis,
+  type Privacy,
+  type RequestRow,
+  type Status,
+} from "@/lib/types";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 type Body = {
   // metadata (PIC, selama status baru/revisi)
+  jenis?: Jenis;
   judul?: string;
   deskripsi?: string;
   tags?: string[];
@@ -47,6 +54,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
       (row.status === "baru" || row.status === "revisi");
 
     if (
+      body.jenis !== undefined ||
       body.judul !== undefined ||
       body.deskripsi !== undefined ||
       body.tags !== undefined ||
@@ -61,6 +69,20 @@ export async function PATCH(request: Request, ctx: Ctx) {
     ) {
       if (!isAdmin && !editableByPic) {
         throw new ApiError(403, "Request ini sudah dikunci, tidak bisa diubah");
+      }
+      if (body.jenis !== undefined) {
+        if (body.jenis !== "video" && body.jenis !== "zoom") {
+          throw new ApiError(400, "Jenis kiriman tidak dikenali");
+        }
+        // Berkas yang sudah terunggah belum tentu cocok dengan jenis baru,
+        // jadi penggantian jenis hanya boleh selagi belum ada berkas.
+        if (body.jenis !== row.jenis && row.drive_file_id) {
+          throw new ApiError(
+            400,
+            "Hapus atau ganti berkasnya dulu sebelum mengubah jenis kiriman",
+          );
+        }
+        patch.jenis = body.jenis;
       }
       if (body.judul !== undefined) {
         const judul = body.judul.trim();

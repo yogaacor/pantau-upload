@@ -24,6 +24,21 @@ PIC buat request ──▶ upload video (browser ──▶ Drive)
                    status: Selesai ──▶ hapus file mentah dari Drive
 ```
 
+## Dua jenis kiriman
+
+| Jenis | Kapan dipakai | Kerja admin |
+|---|---|---|
+| **Video jadi** | Berkas video final, siap diunggah apa adanya | Unggah ke YouTube, tempel linknya |
+| **Zoom mentah** | Penyimpanan PIC penuh sehingga rekaman Zoom belum bisa dikonversi | Konversi dulu, baru unggah |
+
+Kiriman Zoom mentah berkas `.zoom`-nya tidak punya mime video, jadi
+penyaringannya lewat ekstensi (`.zoom`, `.mp4`, `.mov`, `.mkv`, `.zip`, dan
+beberapa lain). Berkasnya juga diberi penanda `ZOOM` di nama file supaya
+kelihatan langsung dari isi folder Drive tanpa membuka dashboard.
+
+Jenis kiriman dikunci begitu berkasnya terunggah — berkas yang sudah masuk
+belum tentu cocok dengan jenis yang baru.
+
 Yang perlu digarisbawahi: **byte videonya tidak pernah lewat server ini.**
 Server hanya menerbitkan *resumable session URI* dari Google, lalu browser PIC
 mengirim file langsung ke Drive per potongan 8 MB. Hosting gratisan pun kuat

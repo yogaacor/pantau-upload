@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TopNav } from "@/components/TopNav";
 import { StatusBadge } from "@/components/StatusBadge";
+import { JenisBadge } from "@/components/JenisBadge";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { driveViewUrl } from "@/lib/google";
 import { formatBytes, timeAgo } from "@/lib/format";
@@ -46,9 +47,9 @@ export default async function AdminPage({
     );
   });
 
-  const antre = semua.filter(
-    (r) => r.status === "baru" && r.drive_file_id !== null,
-  ).length;
+  const siap = semua.filter((r) => r.status === "baru" && r.drive_file_id !== null);
+  const antre = siap.length;
+  const perluKonversi = siap.filter((r) => r.jenis === "zoom").length;
 
   return (
     <>
@@ -57,7 +58,10 @@ export default async function AdminPage({
         <h1 className="text-2xl font-semibold tracking-tight">Antrian upload</h1>
         <p className="mt-1 mb-6 text-sm text-ink-400">
           {antre > 0
-            ? `${antre} request siap dikerjakan — filenya sudah ada di Drive.`
+            ? `${antre} request siap dikerjakan — filenya sudah ada di Drive.` +
+              (perluKonversi > 0
+                ? ` ${perluKonversi} di antaranya rekaman Zoom mentah yang perlu dikonversi dulu.`
+                : "")
             : "Tidak ada yang siap dikerjakan saat ini."}
         </p>
 
@@ -153,7 +157,10 @@ export default async function AdminPage({
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <StatusBadge status={r.status} />
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <StatusBadge status={r.status} />
+                          {r.jenis === "zoom" && <JenisBadge jenis={r.jenis} />}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-ink-400">
                         {timeAgo(r.updated_at)}

@@ -57,9 +57,10 @@ export default function PrivacyPage() {
                 Judul, deskripsi, tag, kategori, jadwal tayang yang diinginkan,
                 serta catatan dan komentar yang kamu tulis sendiri.
               </Poin>
-              <Poin label="Berkas video">
-                Berkas video dan gambar sampul yang kamu unggah, beserta nama,
-                ukuran, dan tipe berkasnya.
+              <Poin label="Berkas yang diunggah">
+                Berkas video yang sudah jadi, rekaman rapat mentah yang belum
+                dikonversi, dan gambar sampul — beserta nama, ukuran, dan tipe
+                berkasnya.
               </Poin>
               <Poin label="Jejak aktivitas">
                 Catatan perubahan status dan waktunya, agar riwayat tiap
@@ -183,7 +184,7 @@ export default function PrivacyPage() {
         <div className="mt-14 border-t border-ink-800 pt-6">
           <Link
             href="/"
-            className="text-sm text-ink-400 transition hover:text-ink-100"
+            className="btn-back"
           >
             ← Kembali ke beranda
           </Link>

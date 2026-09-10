@@ -3,11 +3,14 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatBytes } from "@/lib/format";
+import { ZOOM_EXT, type Jenis } from "@/lib/types";
 import { UploadAbortedError, uploadToDrive } from "@/lib/upload";
 
 type Props = {
   requestId: string;
   kind?: "video" | "thumb";
+  /** Menentukan format apa yang boleh dipilih untuk berkas utama. */
+  jenis?: Jenis;
   currentName?: string | null;
   currentSize?: number | null;
   disabled?: boolean;
@@ -18,6 +21,7 @@ type Phase = "idle" | "menyiapkan" | "mengirim" | "mencatat" | "selesai";
 export function DriveUploader({
   requestId,
   kind = "video",
+  jenis = "video",
   currentName,
   currentSize,
   disabled,
@@ -33,8 +37,16 @@ export function DriveUploader({
   const [dragging, setDragging] = useState(false);
 
   const busy = phase !== "idle" && phase !== "selesai";
-  const accept = kind === "thumb" ? "image/*" : "video/*";
   const pct = total > 0 ? Math.round((sent / total) * 100) : 0;
+
+  // Rekaman Zoom mentah berekstensi .zoom dan tidak punya mime video,
+  // jadi filter dialog berkas harus menyebut ekstensinya langsung.
+  const accept =
+    kind === "thumb"
+      ? "image/*"
+      : jenis === "zoom"
+        ? ZOOM_EXT.join(",")
+        : "video/*";
 
   async function start(file: File) {
     setError(null);
@@ -94,7 +106,8 @@ export function DriveUploader({
     }
   }
 
-  const label = kind === "thumb" ? "thumbnail" : "video";
+  const label =
+    kind === "thumb" ? "thumbnail" : jenis === "zoom" ? "rekaman Zoom" : "video";
 
   return (
     <div>

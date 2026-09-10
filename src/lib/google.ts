@@ -154,12 +154,17 @@ export function driveDownloadUrl(fileId: string): string {
 /**
  * Nama file yang seragam supaya isi folder Drive gampang dibaca:
  *   2026-09-10_Divisi-A_Judul-Video_PU-0007.mp4
+ *
+ * `tag` dipakai untuk menandai kiriman yang butuh penanganan khusus,
+ * mis. ZOOM untuk rekaman mentah yang masih harus dikonversi — supaya
+ * kelihatan dari nama berkasnya saja tanpa membuka dashboard.
  */
 export function buildFileName(opts: {
   kode: string | null;
   divisi: string | null;
   judul: string;
   originalName: string;
+  tag?: string | null;
 }): string {
   const tanggal = new Date().toISOString().slice(0, 10);
   const ext = opts.originalName.includes(".")
@@ -175,6 +180,7 @@ export function buildFileName(opts: {
       .slice(0, 60);
 
   const parts = [tanggal];
+  if (opts.tag) parts.push(opts.tag);
   if (opts.divisi) parts.push(slug(opts.divisi));
   parts.push(slug(opts.judul) || "tanpa-judul");
   if (opts.kode) parts.push(opts.kode);

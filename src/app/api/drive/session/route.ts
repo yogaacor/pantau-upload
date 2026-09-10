@@ -1,6 +1,6 @@
 import { ApiError, handle, requireActor } from "@/lib/api";
 import { buildFileName, createResumableSession } from "@/lib/google";
-import type { RequestRow } from "@/lib/types";
+import { ZOOM_EXT, type RequestRow } from "@/lib/types";
 
 /** Batas aman per file; bisa ditimpa lewat env. Default 5 GB. */
 const MAX_BYTES = Number(process.env.MAX_UPLOAD_BYTES ?? 5 * 1024 ** 3);
@@ -30,9 +30,6 @@ export async function POST(request: Request) {
     }
 
     const mimeType = body.mimeType || "application/octet-stream";
-    if (kind === "video" && !mimeType.startsWith("video/")) {
-      throw new ApiError(400, "File harus berupa video");
-    }
     if (kind === "thumb" && !mimeType.startsWith("image/")) {
       throw new ApiError(400, "Thumbnail harus berupa gambar");
     }
@@ -46,6 +43,28 @@ export async function POST(request: Request) {
     if (!data) throw new ApiError(404, "Request tidak ditemukan");
     const row = data as RequestRow;
 
+    // Berkas utama disaring sesuai jenis kiriman. Rekaman Zoom yang belum
+    // dikonversi tidak punya mime video — browser mengirimkannya sebagai
+    // octet-stream — jadi penyaringannya lewat ekstensi, bukan mime.
+    if (kind === "video") {
+      const dot = body.fileName.lastIndexOf(".");
+      const ext = dot > 0 ? body.fileName.slice(dot).toLowerCase() : "";
+
+      if (row.jenis === "zoom") {
+        if (!ZOOM_EXT.includes(ext as (typeof ZOOM_EXT)[number])) {
+          throw new ApiError(
+            400,
+            `Format tidak dikenali. Untuk rekaman Zoom mentah, kirim berkas ${ZOOM_EXT.join(", ")}`,
+          );
+        }
+      } else if (!mimeType.startsWith("video/")) {
+        throw new ApiError(
+          400,
+          "File harus berupa video. Kalau rekaman Zoom-mu belum dikonversi, ubah jenis kiriman jadi Zoom mentah",
+        );
+      }
+    }
+
     const isAdmin = actor.profile.role === "admin";
     const isOwner = row.requester_id === actor.profile.id;
     if (!isAdmin && !isOwner) throw new ApiError(403, "Bukan request kamu");
@@ -58,6 +77,7 @@ export async function POST(request: Request) {
       divisi: actor.profile.divisi,
       judul: row.judul,
       originalName: body.fileName,
+      tag: row.jenis === "zoom" && kind === "video" ? "ZOOM" : null,
     });
 
     // Origin diteruskan supaya Google mengirim header CORS untuk PUT dari browser.

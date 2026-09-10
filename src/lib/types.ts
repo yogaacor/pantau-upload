@@ -4,6 +4,14 @@ export type Status = "baru" | "diproses" | "revisi" | "selesai" | "ditolak";
 
 export type Privacy = "public" | "unlisted" | "private";
 
+/**
+ * Jenis kiriman.
+ * - `video` — berkas video sudah jadi, tinggal diunggah apa adanya
+ * - `zoom`  — rekaman Zoom mentah yang belum dikonversi; admin yang
+ *             mengonversinya dulu sebelum diunggah
+ */
+export type Jenis = "video" | "zoom";
+
 export type EventType =
   | "dibuat"
   | "status"
@@ -28,6 +36,7 @@ export type RequestRow = {
   kode: string | null;
   requester_id: string;
 
+  jenis: Jenis;
   judul: string;
   deskripsi: string | null;
   tags: string[];
@@ -99,6 +108,36 @@ export const STATUS_ORDER: Status[] = [
   "selesai",
   "ditolak",
 ];
+
+export const JENIS_LABEL: Record<Jenis, string> = {
+  video: "Video jadi",
+  zoom: "Zoom mentah",
+};
+
+export const JENIS_STYLE: Record<Jenis, string> = {
+  video: "bg-brand-500/10 text-brand-400 ring-brand-500/30",
+  zoom: "bg-violet-500/10 text-violet-300 ring-violet-500/30",
+};
+
+/**
+ * Ekstensi yang diterima untuk kiriman Zoom mentah.
+ *
+ * Rekaman Zoom yang belum dikonversi berbentuk `.zoom` (mis.
+ * `double_click_to_convert_01.zoom`) dan browser melaporkannya tanpa
+ * mime video, jadi penyaringan harus lewat ekstensi. Beberapa format
+ * lain ikut diterima karena hasil rekaman lokal Zoom bisa bermacam
+ * bentuk, termasuk ketika PIC mengarsipkan seluruh foldernya.
+ */
+export const ZOOM_EXT = [
+  ".zoom",
+  ".mp4",
+  ".m4a",
+  ".m4v",
+  ".mov",
+  ".mkv",
+  ".avi",
+  ".zip",
+] as const;
 
 export const PRIVACY_LABEL: Record<Privacy, string> = {
   public: "Publik",

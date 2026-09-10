@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { TopNav } from "@/components/TopNav";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DriveUploader } from "@/components/DriveUploader";
+import { JenisBadge } from "@/components/JenisBadge";
 import { AdminPanel } from "@/components/AdminPanel";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
 import { driveViewUrl } from "@/lib/google";
@@ -66,7 +67,7 @@ export default async function RequestDetailPage({
       <main className="mx-auto max-w-5xl px-4 py-8">
         <Link
           href={isAdmin ? "/admin" : "/dashboard"}
-          className="text-sm text-ink-400 transition hover:text-ink-100"
+          className="btn-back"
         >
           ← {isAdmin ? "Antrian" : "Request saya"}
         </Link>
@@ -76,6 +77,7 @@ export default async function RequestDetailPage({
             <div className="flex items-center gap-2.5">
               <span className="font-mono text-xs text-ink-400">{row.kode}</span>
               <StatusBadge status={row.status} />
+              <JenisBadge jenis={row.jenis} />
             </div>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight">
               {row.judul}
@@ -123,7 +125,19 @@ export default async function RequestDetailPage({
             )}
 
             <div className="card p-5">
-              <h2 className="mb-4 text-sm font-semibold">File video</h2>
+              <h2 className="mb-4 text-sm font-semibold">
+                {row.jenis === "zoom"
+                  ? "Berkas rekaman Zoom (belum dikonversi)"
+                  : "File video"}
+              </h2>
+
+              {row.jenis === "zoom" && (
+                <p className="mb-4 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3.5 py-3 text-xs leading-relaxed text-violet-200">
+                  Kiriman ini berupa rekaman mentah. Admin yang akan
+                  mengonversinya lebih dulu, lalu mengunggahnya ke YouTube —
+                  jadi prosesnya bisa lebih lama dari kiriman video jadi.
+                </p>
+              )}
 
               {row.drive_file_id ? (
                 <div className="flex flex-wrap items-center gap-3 rounded-lg border border-ink-800 bg-ink-850/50 p-3.5">
@@ -159,6 +173,7 @@ export default async function RequestDetailPage({
                 <div className="mt-4">
                   <DriveUploader
                     requestId={row.id}
+                    jenis={row.jenis}
                     currentName={row.drive_file_name}
                     currentSize={row.drive_file_size}
                   />
