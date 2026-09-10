@@ -1,9 +1,5 @@
-"use client";
-
-import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 const ERROR_TEXT: Record<string, string> = {
   "tidak-terdaftar": "Login gagal disimpan. Coba ulangi.",
@@ -16,14 +12,31 @@ const LANGKAH = [
   { no: "03", judul: "Tayang", isi: "Link YouTube muncul di dashboard" },
 ];
 
+const KEUNGGULAN = [
+  "File dikirim dari browsermu langsung ke Google Drive, tidak menumpuk di server.",
+  "Upload terputus? Dilanjutkan dari byte terakhir, bukan diulang dari nol.",
+];
+
+function Logo({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`flex items-center gap-2.5 text-base font-semibold tracking-tight ${className}`}
+    >
+      <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-sm text-white shadow-lg shadow-brand-600/30">
+        ▶
+      </span>
+      pantau<span className="-ml-2 text-ink-400">-upload</span>
+    </span>
+  );
+}
+
 /* ------------------------------------------------------------------ */
-/* Panel kiri: kolase yang meniru tampilan aplikasi                    */
+/* Kolom kiri: kolase yang meniru tampilan aplikasi                    */
 /* ------------------------------------------------------------------ */
 
 function Showcase() {
   return (
     <div className="relative hidden overflow-hidden border-r border-ink-800 bg-ink-900 lg:flex lg:flex-col">
-      {/* latar: gradien lembut + kisi titik */}
       <div
         aria-hidden
         className="animate-drift pointer-events-none absolute -top-32 -left-24 size-[30rem] rounded-full bg-brand-600/20 blur-3xl"
@@ -45,13 +58,7 @@ function Showcase() {
 
       <div className="relative flex flex-1 flex-col justify-between p-10 xl:p-14">
         <div>
-          <span className="flex items-center gap-2.5 text-base font-semibold tracking-tight">
-            <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-sm text-white shadow-lg shadow-brand-600/30">
-              ▶
-            </span>
-            pantau<span className="-ml-2 text-ink-400">-upload</span>
-          </span>
-
+          <Logo />
           <h1 className="mt-10 max-w-md text-3xl leading-tight font-semibold tracking-tight xl:text-4xl">
             Dari PIC ke kanal YouTube, tanpa pesan berantai.
           </h1>
@@ -61,9 +68,8 @@ function Showcase() {
           </p>
         </div>
 
-        {/* kolase kartu */}
         <div className="relative my-10 max-w-md">
-          {/* kartu 1 — baris request */}
+          {/* baris request */}
           <div className="animate-float card bg-ink-850/90 p-4 shadow-2xl shadow-black/40 backdrop-blur">
             <div className="flex items-center gap-2">
               <span className="font-mono text-[11px] text-ink-400">PU-0042</span>
@@ -80,7 +86,7 @@ function Showcase() {
             </p>
           </div>
 
-          {/* kartu 2 — progres upload */}
+          {/* progres upload */}
           <div
             className="animate-float card ml-10 -mt-2 bg-ink-850/90 p-4 shadow-2xl shadow-black/40 backdrop-blur"
             style={{ animationDelay: "-2.3s" }}
@@ -99,7 +105,7 @@ function Showcase() {
             </p>
           </div>
 
-          {/* kartu 3 — hasil tayang */}
+          {/* hasil tayang */}
           <div
             className="animate-float card mt-3 flex items-center gap-3 bg-ink-850/90 p-3.5 shadow-2xl shadow-black/40 backdrop-blur"
             style={{ animationDelay: "-4.6s" }}
@@ -116,7 +122,6 @@ function Showcase() {
           </div>
         </div>
 
-        {/* tiga langkah */}
         <ol className="grid grid-cols-3 gap-4 border-t border-ink-800 pt-7">
           {LANGKAH.map((l) => (
             <li key={l.no}>
@@ -136,124 +141,68 @@ function Showcase() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Panel kanan: kartu login                                            */
+/* Halaman                                                             */
 /* ------------------------------------------------------------------ */
 
-function LoginPanel() {
-  const params = useSearchParams();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; next?: string }>;
+}) {
+  // Query dibaca di server supaya seluruh halaman — termasuk tombol
+  // masuk — sudah ada di HTML pertama, tanpa menunggu hidrasi.
+  const { error, next } = await searchParams;
+  const message = error ? (ERROR_TEXT[error] ?? error) : null;
+  const tujuan = next?.startsWith("/") ? next : "/";
 
-  const urlError = params.get("error");
-  const next = params.get("next") ?? "/";
-
-  async function signIn() {
-    setLoading(true);
-    setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    }
-  }
-
-  const message = error ?? (urlError ? (ERROR_TEXT[urlError] ?? urlError) : null);
-
-  return (
-    <div className="flex flex-col justify-center px-6 py-14 sm:px-12">
-      <div className="mx-auto w-full max-w-sm">
-        {/* logo kecil, hanya di layar sempit ketika panel kiri disembunyikan */}
-        <span className="mb-10 flex items-center gap-2 text-base font-semibold tracking-tight lg:hidden">
-          <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-sm text-white">
-            ▶
-          </span>
-          pantau<span className="-ml-2 text-ink-400">-upload</span>
-        </span>
-
-        <h2 className="text-2xl font-semibold tracking-tight">Masuk</h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink-400">
-          Pakai akun Google kamu. Tidak perlu mendaftar dulu — akun dibuat
-          otomatis saat pertama kali masuk.
-        </p>
-
-        {message && (
-          <p className="mt-6 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-300">
-            {message}
-          </p>
-        )}
-
-        <button
-          onClick={signIn}
-          disabled={loading}
-          className="btn-ghost mt-7 w-full py-3"
-        >
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.57c2.08-1.92 3.28-4.74 3.28-8.09Z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.76c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84Z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 4.75c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.46 14.97.5 12 .5A11 11 0 0 0 2.18 7.05l3.66 2.84C6.71 7.29 9.14 4.75 12 4.75Z"
-            />
-          </svg>
-          {loading ? "Mengalihkan…" : "Masuk dengan Google"}
-        </button>
-
-        <div className="mt-8 space-y-2.5 border-t border-ink-800 pt-7 text-xs text-ink-400">
-          <p className="flex items-start gap-2.5">
-            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-500" />
-            File dikirim dari browsermu langsung ke Google Drive, tidak
-            menumpuk di server.
-          </p>
-          <p className="flex items-start gap-2.5">
-            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-500" />
-            Upload terputus? Dilanjutkan dari byte terakhir, bukan diulang dari
-            nol.
-          </p>
-        </div>
-
-        <p className="mt-10 text-xs text-ink-400">
-          <Link
-            href="/privacy"
-            className="underline underline-offset-2 transition hover:text-ink-100"
-          >
-            Kebijakan privasi
-          </Link>
-          <span className="mx-2">·</span>
-          <Link
-            href="/"
-            className="underline underline-offset-2 transition hover:text-ink-100"
-          >
-            Beranda
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export default function LoginPage() {
   return (
     <main className="min-h-dvh lg:grid lg:grid-cols-2">
       <Showcase />
-      <Suspense>
-        <LoginPanel />
-      </Suspense>
+
+      <div className="flex flex-col justify-center px-6 py-14 sm:px-12">
+        <div className="mx-auto w-full max-w-sm">
+          <Logo className="mb-10 lg:hidden" />
+
+          <h2 className="text-2xl font-semibold tracking-tight">Masuk</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-400">
+            Pakai akun Google kamu. Tidak perlu mendaftar dulu — akun dibuat
+            otomatis saat pertama kali masuk.
+          </p>
+
+          {message && (
+            <p className="mt-6 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-300">
+              {message}
+            </p>
+          )}
+
+          <GoogleSignInButton next={tujuan} />
+
+          <div className="mt-8 space-y-2.5 border-t border-ink-800 pt-7 text-xs text-ink-400">
+            {KEUNGGULAN.map((k) => (
+              <p key={k} className="flex items-start gap-2.5">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-500" />
+                {k}
+              </p>
+            ))}
+          </div>
+
+          <p className="mt-10 text-xs text-ink-400">
+            <Link
+              href="/privacy"
+              className="underline underline-offset-2 transition hover:text-ink-100"
+            >
+              Kebijakan privasi
+            </Link>
+            <span className="mx-2">·</span>
+            <Link
+              href="/"
+              className="underline underline-offset-2 transition hover:text-ink-100"
+            >
+              Beranda
+            </Link>
+          </p>
+        </div>
+      </div>
     </main>
   );
 }
