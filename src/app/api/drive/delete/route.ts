@@ -28,15 +28,23 @@ export async function POST(request: Request) {
     if (row.status !== "selesai") {
       throw new ApiError(400, "File hanya boleh dihapus setelah status Selesai");
     }
-    if (!row.drive_file_id) throw new ApiError(400, "Tidak ada file di Drive");
+    if (!row.drive_file_id && !row.file2_id) {
+      throw new ApiError(400, "Tidak ada file di Drive");
+    }
 
-    await deleteFile(row.drive_file_id);
+    if (row.drive_file_id) await deleteFile(row.drive_file_id);
+    // Kiriman Zoom punya berkas kedua; ikut dibersihkan sekalian.
+    if (row.file2_id) await deleteFile(row.file2_id);
     if (body.includeThumb && row.thumb_file_id) {
       await deleteFile(row.thumb_file_id);
     }
+    // Subfoldernya sudah kosong setelah isinya dihapus.
+    if (row.drive_folder_id) await deleteFile(row.drive_folder_id);
 
     const patch: Record<string, unknown> = {
       drive_file_id: null,
+      file2_id: null,
+      drive_folder_id: null,
       drive_deleted_at: new Date().toISOString(),
     };
     if (body.includeThumb && row.thumb_file_id) patch.thumb_file_id = null;

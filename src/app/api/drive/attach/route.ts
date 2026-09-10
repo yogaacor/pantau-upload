@@ -5,7 +5,7 @@ import type { RequestRow } from "@/lib/types";
 
 type Body = {
   requestId?: string;
-  kind?: "video" | "thumb";
+  kind?: "video" | "file2" | "thumb";
   fileId?: string;
 };
 
@@ -43,13 +43,19 @@ export async function POST(request: Request) {
     const patch: Record<string, unknown> =
       kind === "thumb"
         ? { thumb_file_id: meta.id, thumb_file_name: meta.name }
-        : {
-            drive_file_id: meta.id,
-            drive_file_name: meta.name,
-            drive_file_size: meta.size,
-            drive_mime: meta.mimeType,
-            drive_deleted_at: null,
-          };
+        : kind === "file2"
+          ? {
+              file2_id: meta.id,
+              file2_name: meta.name,
+              file2_size: meta.size,
+            }
+          : {
+              drive_file_id: meta.id,
+              drive_file_name: meta.name,
+              drive_file_size: meta.size,
+              drive_mime: meta.mimeType,
+              drive_deleted_at: null,
+            };
 
     const { error } = await actor.supabase
       .from("requests")
@@ -58,7 +64,12 @@ export async function POST(request: Request) {
     if (error) throw new ApiError(400, error.message);
 
     // Bersihkan file lama kalau ini penggantian.
-    const previousId = kind === "thumb" ? row.thumb_file_id : row.drive_file_id;
+    const previousId =
+      kind === "thumb"
+        ? row.thumb_file_id
+        : kind === "file2"
+          ? row.file2_id
+          : row.drive_file_id;
     if (previousId && previousId !== meta.id) {
       try {
         await deleteFile(previousId);
@@ -73,7 +84,7 @@ export async function POST(request: Request) {
       message:
         kind === "thumb"
           ? `Thumbnail diunggah: ${meta.name}`
-          : `Video diunggah: ${meta.name} (${formatBytes(meta.size)})`,
+          : `Berkas diunggah: ${meta.name} (${formatBytes(meta.size)})`,
     });
 
     return { ok: true, name: meta.name, size: meta.size };

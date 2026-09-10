@@ -45,11 +45,18 @@ export type RequestRow = {
   jadwal_tayang: string | null;
   catatan: string | null;
 
+  drive_folder_id: string | null;
+
   drive_file_id: string | null;
   drive_file_name: string | null;
   drive_file_size: number | null;
   drive_mime: string | null;
   drive_deleted_at: string | null;
+
+  /** Berkas kedua, hanya dipakai kiriman Zoom (…_02.zoom). */
+  file2_id: string | null;
+  file2_name: string | null;
+  file2_size: number | null;
 
   thumb_file_id: string | null;
   thumb_file_name: string | null;
@@ -128,6 +135,17 @@ export const JENIS_STYLE: Record<Jenis, string> = {
  * lain ikut diterima karena hasil rekaman lokal Zoom bisa bermacam
  * bentuk, termasuk ketika PIC mengarsipkan seluruh foldernya.
  */
+/**
+ * Nama berkas yang diharapkan dari rekaman Zoom lokal yang belum
+ * dikonversi. Ditampilkan sebagai petunjuk di form upload, dan namanya
+ * dipertahankan apa adanya di Drive karena konverter Zoom bergantung
+ * pada penamaan ini.
+ */
+export const ZOOM_FILES = [
+  "double_click_to_convert_01.zoom",
+  "double_click_to_convert_02.zoom",
+] as const;
+
 export const ZOOM_EXT = [
   ".zoom",
   ".mp4",

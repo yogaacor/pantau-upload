@@ -31,10 +31,22 @@ PIC buat request ──▶ upload video (browser ──▶ Drive)
 | **Video jadi** | Berkas video final, siap diunggah apa adanya | Unggah ke YouTube, tempel linknya |
 | **Zoom mentah** | Penyimpanan PIC penuh sehingga rekaman Zoom belum bisa dikonversi | Konversi dulu, baru unggah |
 
-Kiriman Zoom mentah berkas `.zoom`-nya tidak punya mime video, jadi
-penyaringannya lewat ekstensi (`.zoom`, `.mp4`, `.mov`, `.mkv`, `.zip`, dan
-beberapa lain). Berkasnya juga diberi penanda `ZOOM` di nama file supaya
-kelihatan langsung dari isi folder Drive tanpa membuka dashboard.
+Berkas `.zoom` tidak punya mime video, jadi penyaringannya lewat ekstensi
+(`.zoom`, `.zip`, `.mp4`, `.mov`, `.mkv`, dan beberapa lain), bukan mime.
+
+**Kiriman Zoom boleh dikirim dua cara**, dan keduanya dijelaskan langsung di
+halaman uploadnya:
+
+1. Seluruh folder rekaman dikompres jadi satu `.zip` — cara paling gampang
+2. Dua berkasnya langsung: `double_click_to_convert_01.zoom` dan
+   `double_click_to_convert_02.zoom`
+
+**Berkas Zoom tidak di-rename.** Konverter Zoom mengenali rekaman dari
+penamaan aslinya, jadi nama yang diubah bisa membuatnya gagal dikonversi.
+Konsekuensinya nama dari banyak PIC akan identik — karena itu tiap kiriman
+Zoom mendapat **subfolder sendiri** di dalam folder tujuan, diberi nama
+`<tanggal>_ZOOM_<divisi>_<judul>_<kode>`. Kiriman video jadi tetap di-rename
+seragam seperti biasa dan tetap di folder utama.
 
 Jenis kiriman dikunci begitu berkasnya terunggah — berkas yang sudah masuk
 belum tentu cocok dengan jenis yang baru.
