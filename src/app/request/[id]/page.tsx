@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { TopNav } from "@/components/TopNav";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DriveUploader } from "@/components/DriveUploader";
+import { HapusBerkasButton } from "@/components/HapusBerkasButton";
 import { JenisBadge } from "@/components/JenisBadge";
 import { AdminPanel } from "@/components/AdminPanel";
 import { createClient, getSessionProfile } from "@/lib/supabase/server";
@@ -157,6 +158,12 @@ export default async function RequestDetailPage({
                   >
                     Buka di Drive
                   </a>
+                  {(dapatEdit || isAdmin) && (
+                    <HapusBerkasButton
+                      requestId={row.id}
+                      fileName={row.drive_file_name}
+                    />
+                  )}
                 </div>
               ) : row.drive_deleted_at ? (
                 <p className="rounded-lg border border-ink-800 bg-ink-850/50 p-3.5 text-sm text-ink-400">
@@ -179,6 +186,18 @@ export default async function RequestDetailPage({
                     currentName={row.drive_file_name}
                     currentSize={row.drive_file_size}
                   />
+                </div>
+              )}
+
+              {isOwner && row.drive_file_id && (
+                <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-ink-800 pt-5">
+                  <Link href="/dashboard" className="btn-primary">
+                    Selesai
+                  </Link>
+                  <span className="text-xs text-ink-400">
+                    Berkasnya sudah tersimpan. Tinggal tunggu admin
+                    memprosesnya.
+                  </span>
                 </div>
               )}
             </div>
