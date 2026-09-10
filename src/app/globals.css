@@ -76,6 +76,12 @@ body {
     @apply border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20;
   }
 
+  .btn-back {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-ink-700/80 bg-ink-900/90 px-3 py-1.5
+           text-xs font-medium text-ink-300 transition-all shadow-sm
+           hover:border-ink-600 hover:bg-ink-850 hover:text-ink-100 active:scale-[0.98];
+  }
+
   .badge {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1
            text-xs font-medium ring-1 ring-inset;

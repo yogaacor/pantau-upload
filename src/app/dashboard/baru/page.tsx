@@ -15,7 +15,7 @@ export default async function RequestBaruPage() {
       <main className="mx-auto max-w-3xl px-4 py-8">
         <Link
           href="/dashboard"
-          className="text-sm text-ink-400 transition hover:text-ink-100"
+          className="btn-back"
         >
           ← Kembali
         </Link>
