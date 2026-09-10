@@ -133,12 +133,6 @@ export default async function RequestDetailPage({
                     Kompres seluruh folder rekaman jadi satu berkas{" "}
                     <code className="rounded bg-violet-500/20 px-1 py-0.5">.zip</code>, lalu unggah di sini.
                   </p>
-                  <p className="mt-2.5">
-                    Kirim foldernya utuh — jangan pilih-pilih isinya dan jangan
-                    ubah nama berkas di dalamnya. Konverter Zoom mengenali
-                    rekaman dari penamaan aslinya, jadi isi yang berubah bisa
-                    gagal dikonversi.
-                  </p>
                 </div>
               )}
 
@@ -173,8 +167,6 @@ export default async function RequestDetailPage({
                 </p>
               ) : (
                 <p className="mb-4 text-sm text-ink-400">
-                  Belum ada berkas. Unggah di bawah ini; berkasnya langsung
-                  masuk ke folder Drive admin.
                 </p>
               )}
 
@@ -246,7 +238,7 @@ export default async function RequestDetailPage({
               <div className="card p-5">
                 <h2 className="mb-3 text-sm font-semibold">Status</h2>
                 <StatusBadge status={row.status} />
-                <p className="mt-3 text-xs leading-relaxed text-ink-400">
+                {/* <p className="mt-3 text-xs leading-relaxed text-ink-400">
                   {row.status === "baru" &&
                     (row.drive_file_id
                       ? "File sudah masuk. Tinggal tunggu admin memprosesnya."
@@ -259,7 +251,7 @@ export default async function RequestDetailPage({
                     "Video sudah tayang. Linknya ada di atas."}
                   {row.status === "ditolak" &&
                     "Request ini tidak dilanjutkan. Alasannya ada di riwayat."}
-                </p>
+                </p> */}
               </div>
             )}
           </aside>

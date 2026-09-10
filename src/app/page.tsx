@@ -64,8 +64,7 @@ export default async function Home({
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-300">
           pantau-upload merapikan alur dari PIC ke kanal YouTube: satu tempat
-          untuk mengirim video, memantau statusnya, dan menerima link hasilnya —
-          menggantikan pesan berantai dan tautan Drive yang tidak bisa dibuka.
+          untuk mengirim video, memantau statusnya, dan menerima link hasilnya
         </p>
 
         {message && (
@@ -78,10 +77,6 @@ export default async function Home({
           <GoogleSignInButton next={tujuan} variant="primary" />
         </div>
 
-        <p className="mt-3 text-sm text-ink-400">
-          Tidak perlu mendaftar. Akun dibuat otomatis sebagai PIC saat pertama
-          kali masuk.
-        </p>
 
         <ol className="mt-16 grid gap-4 sm:grid-cols-2">
           {LANGKAH.map((l, i) => (
